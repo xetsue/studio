@@ -5,21 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Studio</title>
     <script src="js/WebAudioFontPlayer.js"></script>
+    <script src="js/webaudiofontdata/sound/0000_JCLive_sf2_file.js"></script>
+    <script src="js/webaudiofontdata/sound/1080_GeneralUserGS_sf2_file.js"></script>
+    <script src="js/webaudiofontdata/sound/0253_Acoustic_Guitar_sf2_file.js"></script>
     <style>
         :root {
-            --bg-color: #121212;
-            --text-color: #ffffff;
-            --tile-bg: #ffffff;
-            --tile-text: #000000;
-            --border-color: #333;
-            --accent-color: #d32f2f;
-            --highlight-color: #ff0000;
-            --fret-wire: #555;
-            --string-color: #888;
-            --glass-bg: rgba(255, 255, 255, 0.1);
-        }
-
-        body.light-theme {
             --bg-color: #f0f0f0;
             --text-color: #000000;
             --tile-bg: #000000;
@@ -30,6 +20,19 @@
             --fret-wire: #bbb;
             --string-color: #333;
             --glass-bg: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --tile-bg: #ffffff;
+            --tile-text: #000000;
+            --border-color: #333;
+            --accent-color: #d32f2f;
+            --highlight-color: #ff0000;
+            --fret-wire: #555;
+            --string-color: #888;
+            --glass-bg: rgba(255, 255, 255, 0.1);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -46,6 +49,7 @@
             transition: background-color 0.3s, color 0.3s;
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
         }
@@ -55,33 +59,41 @@
             justify-content: space-between;
             align-items: center;
             padding: 5px 15px;
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
             z-index: 100;
             border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
             height: 50px;
+            background: var(--bg-color);
         }
 
         .corner-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
+            background: var(--text-color);
+            border: 2px solid var(--text-color);
+            color: var(--bg-color);
             font-family: inherit;
-            font-size: 1.2em;
+            font-size: 1.1em;
             cursor: pointer;
-            padding: 5px 10px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-weight: bold;
         }
 
         .vol-control {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.6em;
+            gap: 5px;
+            font-size: 0.7em;
         }
 
         .vol-control input[type="range"] {
-            width: 80px;
+            width: 70px;
             cursor: pointer;
         }
 
@@ -99,22 +111,28 @@
             flex-grow: 1;
             justify-content: center;
             align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
             padding: 20px;
             overflow-y: auto;
         }
 
+        #tileGrid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 360px;
+        }
+
         .tile {
-            width: 140px;
-            height: 140px;
+            width: 150px;
+            height: 150px;
             background-color: var(--tile-bg);
             color: var(--tile-text);
             border-radius: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2em;
+            font-size: 1.3em;
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -126,19 +144,30 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
+        .label-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            width: var(--w);
+        }
+
         .tile span {
             display: inline-block;
             overflow: hidden;
             white-space: nowrap;
             border-right: 2px solid transparent;
+            width: 100%;
+            text-align: left;
         }
 
         .tile:hover span {
-            animation: typing 1s steps(20, end), blink-caret 0.75s step-end infinite;
             border-right: 2px solid var(--tile-text);
+            animation: typing 0.5s steps(var(--s)) forwards, blink-caret 0.75s step-end infinite;
         }
 
-        @keyframes typing { from { width: 0; } to { width: 100%; } }
+        @keyframes typing { 
+            0% { width: 0; } 
+            100% { width: 100%; } 
+        }
         @keyframes blink-caret { from, to { border-color: transparent; } 50% { border-color: var(--tile-text); } }
 
         .instrument-view {
@@ -147,6 +176,7 @@
             flex-direction: column;
             width: 100%;
             height: calc(100vh - 50px);
+            height: calc(100dvh - 50px);
             position: relative;
             overflow: hidden;
         }
@@ -158,54 +188,58 @@
             justify-content: center;
             align-items: center;
             padding: 5px;
-            gap: 10px;
+            gap: 15px;
             background: var(--bg-color);
             border-top: 1px solid var(--border-color);
             flex-shrink: 0;
-            font-size: 0.8em;
-            min-height: 40px;
+            font-size: 0.9em;
+            height: 60px;
         }
 
         .controls-bar button {
             background: var(--glass-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
-            padding: 5px 10px;
+            padding: 8px 15px;
             font-family: inherit;
             cursor: pointer;
             border-radius: 5px;
+            font-size: 1em;
         }
         
         .controls-bar input {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
             color: var(--text-color);
-            padding: 3px;
-            width: 40px;
+            padding: 5px;
+            width: 50px;
             text-align: center;
             font-family: inherit;
+            font-size: 1em;
         }
 
         #pianoContainer {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             flex-grow: 1;
-            padding: 5px;
+            padding: 10px;
             width: 100%;
-            gap: 2px;
-            height: 100%;
+            box-sizing: border-box;
+            gap: 15px;
             overflow: hidden;
         }
 
         .mobile-key-row {
             display: flex;
             position: relative;
-            flex: 1;
             width: 100%;
+            max-width: 800px;
+            height: 90px;
             background: var(--bg-color);
             border: 1px solid var(--border-color);
-            min-height: 0;
+            flex-shrink: 0;
         }
 
         .mobile-key {
@@ -250,25 +284,27 @@
         #kalimbaContainer {
             display: flex;
             justify-content: center;
-            align-items: flex-end;
+            align-items: flex-start;
             flex-grow: 1;
-            padding: 5px;
-            gap: 1px;
+            padding: 20px 10px;
+            gap: 4px;
             width: 100%;
+            box-sizing: border-box;
             overflow: hidden;
         }
 
         .k-tine {
             flex: 1;
             min-width: 0;
+            max-width: 45px;
             background: linear-gradient(to bottom, #999, #eee);
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
             cursor: pointer;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            padding-bottom: 20px;
+            padding-bottom: 15px;
             color: #000;
             font-weight: bold;
             font-size: 0.7em;
@@ -309,7 +345,7 @@
             background: var(--bg-color);
             border: 2px solid var(--border-color);
             overflow: hidden;
-            margin: 5px;
+            margin: 10px;
         }
 
         .playlist-header {
@@ -319,6 +355,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .playlist-item {
@@ -339,7 +376,7 @@
             width: 40px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
             border-right: 1px solid var(--border-color);
             padding: 10px 0;
             height: 100%;
@@ -348,15 +385,17 @@
             top: 0;
             z-index: 10;
             background: var(--bg-color);
+            gap: 20px;
         }
         
         .fret-controls button {
             width: 100%;
-            padding: 10px 0;
+            padding: 15px 0;
             background: none;
             border: 1px solid var(--border-color);
             color: var(--text-color);
             cursor: pointer;
+            font-size: 1.2em;
         }
         
         .fret-area-wrapper {
@@ -377,6 +416,7 @@
             margin: 0 auto;
             padding: 5px 0;
             border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .string-label-item {
@@ -392,6 +432,7 @@
             width: 100%;
             display: flex;
             justify-content: center;
+            overflow: hidden;
         }
 
         .string-container {
@@ -511,11 +552,12 @@
             padding: 5px;
             border-top: 1px solid var(--border-color);
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
         
         .playlist-actions button {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             background: var(--glass-bg);
             border: none;
             color: var(--text-color);
@@ -524,7 +566,7 @@
             min-width: 60px;
         }
         
-        #muteBtn {
+        #snapBtn {
             width: 100%;
             padding: 15px;
             background: #8b0000;
@@ -534,6 +576,7 @@
             cursor: pointer;
             margin-top: auto;
             flex-shrink: 0;
+            height: 60px;
         }
 
         #ctxMenu {
@@ -565,14 +608,22 @@
             }
             #guitarPlaylist {
                 width: 100%;
-                height: 35%;
+                height: 180px;
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
+                max-height: 35%;
             }
             #guitarFretboard {
                 margin: 0;
                 border: none;
                 border-top: 1px solid var(--border-color);
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            .fret-area-wrapper {
+                flex-grow: 1;
+                overflow: hidden;
             }
             .string-container {
                 max-width: 100%;
@@ -580,8 +631,9 @@
             .string-labels {
                 max-width: 100%;
             }
-            #muteBtn {
+            #snapBtn {
                 padding: 10px;
+                height: 50px;
             }
             #kalimbaContainer {
                 padding: 5px;
@@ -589,13 +641,22 @@
             .k-tine {
                 font-size: 0.6em;
             }
+            .mobile-key-row {
+                height: 80px;
+            }
+            .fret-controls {
+                gap: 5px;
+            }
+            .fret-controls button {
+                padding: 10px 0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <button class="corner-btn" id="backBtn" onclick="goBack()">␛</button>
-        <div style="cursor: default;">./Studio.</div>
+        <div style="cursor: pointer;" onclick="clearCache()">./Studio.</div>
         <div class="vol-control">
             Vol <input type="range" id="masterVol" min="0" max="2" step="0.05" value="1" oninput="updateVolume(this.value)">
             <input type="number" id="masterVolInput" value="1" step="0.05" min="0" max="2" oninput="updateVolume(this.value)">
@@ -604,9 +665,20 @@
     </div>
 
     <div id="menuView">
-        <div class="tile" onclick="loadInstrument('piano')"><span>Piano</span></div>
-        <div class="tile" onclick="loadInstrument('kalimba')"><span>Kalimba</span></div>
-        <div class="tile" onclick="loadInstrument('guitar')"><span>Guitar</span></div>
+        <div id="tileGrid">
+            <div class="tile" onmouseenter="hoverPlay('piano')" onclick="loadInstrument('piano')">
+                <div class="label-wrapper" style="--w: 5ch; --s: 5"><span>Piano</span></div>
+            </div>
+            <div class="tile" onmouseenter="hoverPlay('kalimba')" onclick="loadInstrument('kalimba')">
+                <div class="label-wrapper" style="--w: 7ch; --s: 7"><span>Kalimba</span></div>
+            </div>
+            <div class="tile" onmouseenter="hoverPlay('guitar')" onclick="loadInstrument('guitar')">
+                <div class="label-wrapper" style="--w: 6ch; --s: 6"><span>Guitar</span></div>
+            </div>
+            <div class="tile" onclick="window.location.href='https://xetsue.github.io/synth'">
+                <div class="label-wrapper" style="--w: 3ch; --s: 3"><span>DAW</span></div>
+            </div>
+        </div>
     </div>
 
     <div id="piano" class="instrument-view">
@@ -634,7 +706,7 @@
             <div id="guitarPlaylist">
                 <div class="playlist-header">
                     <span id="currentPlaylistName">Default</span>
-                    <button class="corner-btn" style="float: right; font-size: 0.8em;" onclick="exitPlaylist()">Back</button>
+                    <button class="corner-btn" style="float: right; font-size: 0.8em; width: auto; height: auto; border: 1px solid; border-radius: 4px; color: var(--text-color); background: var(--glass-bg);" onclick="exitPlaylist()">Back</button>
                 </div>
                 <div id="playlistItems" style="flex-grow: 1; overflow-y: auto;"></div>
                 <div class="playlist-actions" id="plActions">
@@ -649,8 +721,8 @@
             </div>
             <div id="guitarFretboard">
                 <div class="fret-controls">
-                    <button onclick="shiftFretView(-1)">⮝</button>
-                    <button onclick="shiftFretView(1)">⮟</button>
+                    <button onclick="shiftFretView(-1)">▲</button>
+                    <button onclick="shiftFretView(1)">▼</button>
                 </div>
                 <div class="fret-area-wrapper">
                     <div class="string-labels">
@@ -663,7 +735,7 @@
                     </div>
                     <div class="fret-area" id="fretArea"></div>
                 </div>
-                <button id="muteBtn" onmousedown="muteGuitar()" ontouchstart="muteGuitar()">MUTE</button>
+                <button id="snapBtn" onmousedown="snapGuitar(event)" ontouchstart="snapGuitar(event)">SNAP</button>
             </div>
         </div>
     </div>
@@ -729,9 +801,9 @@
         let ctxTargetIndex = -1;
 
         const INSTRUMENTS = {
-            piano: { var: '_tone_0000_GeneralUserGS_sf2_file', file: '0000_GeneralUserGS_sf2_file.js' },
+            piano: { var: '_tone_0000_JCLive_sf2_file', file: '0000_JCLive_sf2_file.js' },
             kalimba: { var: '_tone_1080_GeneralUserGS_sf2_file', file: '1080_GeneralUserGS_sf2_file.js' },
-            guitar: { var: '_tone_0250_GeneralUserGS_sf2_file', file: '0250_GeneralUserGS_sf2_file.js' }
+            guitar: { var: '_tone_0253_Acoustic_Guitar_sf2_file', file: '0253_Acoustic_Guitar_sf2_file.js' }
         };
 
         const KEY_MAP_PIANO = {
@@ -758,6 +830,17 @@
             if(audioContext.state === 'suspended') audioContext.resume();
         }
 
+        window.onload = function() {
+            if(localStorage.getItem('studioTheme') === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        };
+
+        function clearCache() {
+            localStorage.removeItem('studioTheme');
+            location.reload();
+        }
+
         function updateVolume(val) {
             document.getElementById('masterVol').value = val;
             document.getElementById('masterVolInput').value = val;
@@ -765,10 +848,17 @@
         }
 
         function toggleTheme() {
-            document.body.classList.toggle('light-theme');
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('studioTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
         }
 
-        function goBack() {
+        function handleHash() {
+            const hash = window.location.hash.replace('#', '');
+            if(hash && INSTRUMENTS[hash]) loadInstrument(hash);
+            else goBack(true);
+        }
+
+        function goBack(skipHash) {
             if(activeInstrument) {
                 muteGuitar();
                 document.getElementById(activeInstrument).classList.remove('active');
@@ -779,6 +869,7 @@
                 activeChordIndex = null;
                 document.querySelectorAll('.playlist-item').forEach(d=>d.classList.remove('active'));
             }
+            if(!skipHash) history.pushState("", document.title, window.location.pathname + window.location.search);
         }
 
         function switchView(type) {
@@ -786,6 +877,7 @@
             document.querySelectorAll('.instrument-view').forEach(el => el.classList.remove('active'));
             document.getElementById(type).classList.add('active');
             activeInstrument = type;
+            window.location.hash = type;
             if(type === 'piano') renderPiano();
             if(type === 'kalimba') renderKalimba();
             if(type === 'guitar') { renderGuitar(); loadPlaylist('Default'); }
@@ -811,6 +903,18 @@
                 script.src = 'js/webaudiofontdata/sound/' + INSTRUMENTS[type].file;
                 script.onload = () => switchView(type);
                 document.head.appendChild(script);
+            }
+        }
+
+        function hoverPlay(type) {
+            if(!audioContext) initAudio();
+            const v = window[INSTRUMENTS[type].var];
+            if(v && masterGain) {
+                let p = 60;
+                if(type === 'piano') p = 24 + Math.floor(Math.random() * 72);
+                if(type === 'kalimba') p = 60 + Math.floor(Math.random() * 21);
+                if(type === 'guitar') p = 40 + Math.floor(Math.random() * 24);
+                player.queueWaveTable(audioContext, masterGain, v, audioContext.currentTime, p, 0.5);
             }
         }
 
@@ -870,18 +974,22 @@
                 }
                 
                 const handleTouch = (e) => {
-                    if(e.buttons !== 1 && e.type.startsWith('mouse')) return;
+                    if(e.type.startsWith('mouse') && e.buttons !== 1) return;
                     e.preventDefault();
-                    const touch = e.type.startsWith('touch') ? e.touches[0] : e;
-                    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if(el && el.classList.contains('mobile-key')) {
-                        const p = parseInt(el.dataset.pitch);
-                        if(!el.classList.contains('active-red')) {
-                             playNote(p, 1.5);
-                             el.classList.add('active-red');
-                             setTimeout(() => el.classList.remove('active-red'), 200);
+                    
+                    const points = e.changedTouches ? Array.from(e.changedTouches) : [e];
+                    
+                    points.forEach(p => {
+                        const el = document.elementFromPoint(p.clientX, p.clientY);
+                        if(el && el.classList.contains('mobile-key')) {
+                            const pitch = parseInt(el.dataset.pitch);
+                            if(!el.classList.contains('active-red')) {
+                                playNote(pitch, 1.5);
+                                el.classList.add('active-red');
+                                setTimeout(() => el.classList.remove('active-red'), 200);
+                            }
                         }
-                    }
+                    });
                 };
 
                 row.addEventListener('mousedown', handleTouch);
@@ -937,6 +1045,7 @@
             const renderRight = rightSeq.slice(0, sideCount);
             
             const keysToRender = [...renderLeft, center, ...renderRight];
+            const maxH = 100;
             
             keysToRender.forEach((k, i) => {
                 const tine = document.createElement('div');
@@ -945,25 +1054,27 @@
                 tine.dataset.pitch = k.pitch;
                 
                 const distFromCenter = Math.abs(i - Math.floor(keysToRender.length/2));
-                const h = 300 - (distFromCenter * 12);
-                tine.style.height = '100%';
-                tine.style.maxHeight = h + 'px';
+                const h = maxH - (distFromCenter * 4); 
+                tine.style.height = h + '%';
                 
                 container.appendChild(tine);
             });
 
             const handleSwipe = (e) => {
-                 if(e.buttons !== 1 && e.type.startsWith('mouse')) return;
+                 if(e.type.startsWith('mouse') && e.buttons !== 1) return;
                  e.preventDefault();
-                 const touch = e.type.startsWith('touch') ? e.touches[0] : e;
-                 const el = document.elementFromPoint(touch.clientX, touch.clientY);
-                 if(el && el.classList.contains('k-tine')) {
-                     if(!el.classList.contains('active-red')) {
-                         playNote(parseInt(el.dataset.pitch), 1.5);
-                         el.classList.add('active-red');
-                         setTimeout(() => el.classList.remove('active-red'), 100);
+                 const points = e.changedTouches ? Array.from(e.changedTouches) : [e];
+                 
+                 points.forEach(p => {
+                     const el = document.elementFromPoint(p.clientX, p.clientY);
+                     if(el && el.classList.contains('k-tine')) {
+                         if(!el.classList.contains('active-red')) {
+                             playNote(parseInt(el.dataset.pitch), 1.5);
+                             el.classList.add('active-red');
+                             setTimeout(() => el.classList.remove('active-red'), 100);
+                         }
                      }
-                 }
+                 });
             };
             container.onmousedown = handleSwipe;
             container.onmousemove = handleSwipe;
@@ -973,6 +1084,23 @@
 
         function muteGuitar() {
             if(player) player.cancelQueue(audioContext);
+        }
+        
+        function snapGuitar(e) {
+            if(e) { e.preventDefault(); e.stopPropagation(); }
+            if(!audioContext || !window[INSTRUMENTS.guitar.var]) return;
+            player.cancelQueue(audioContext);
+            
+            let p = [];
+            for(let i=0; i<6; i++) {
+                let f = currentChordShape[i];
+                if(f > -1) {
+                    p.push(GUITAR_STRINGS_BASE[i] + f);
+                }
+            }
+            if(p.length > 0) {
+                player.queueSnap(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, p, 1.5);
+            }
         }
 
         function renderGuitar() {
@@ -994,15 +1122,16 @@
             }
             area.appendChild(stringsDiv);
 
+            const fretHeight = 100 / 12;
             for(let i=0; i<12; i++) {
                 const fretLine = document.createElement('div');
                 fretLine.className = 'fret-line';
-                fretLine.style.top = `${((i+1)/12)*100}%`;
+                fretLine.style.top = `${(i+1)*fretHeight}%`;
                 area.appendChild(fretLine);
                 const num = document.createElement('span');
                 num.className = 'fret-number';
                 num.textContent = fretOffset + i + 1;
-                num.style.top = `${((i+1)/12)*100 - 4}%`;
+                num.style.top = `${(i+1)*fretHeight - 2}%`;
                 area.appendChild(num);
             }
 
@@ -1012,11 +1141,12 @@
                     strEl.classList.add('vibrate');
                     strEl.classList.add('active-red');
                     setTimeout(() => { strEl.classList.remove('vibrate'); strEl.classList.remove('active-red'); }, 200);
+                    
                     let fret = currentChordShape[idx];
-                    let playFret = (fret === -1) ? 0 : fret;
-                    let pitch = GUITAR_STRINGS_BASE[idx] + playFret;
+                    let p = GUITAR_STRINGS_BASE[idx] + (fret === -1 ? 0 : fret);
+                    
                     if(window[INSTRUMENTS.guitar.var]) {
-                        player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, pitch, 2.5);
+                        player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, p, 1.5);
                     }
                 }
             };
@@ -1024,10 +1154,14 @@
             const handleStrum = (e) => {
                 if(!audioContext) initAudio();
                 const rect = stringsDiv.getBoundingClientRect();
-                const x = (e.clientX || e.touches[0].clientX) - rect.left;
-                const widthPerString = rect.width / 6;
-                const stringIdx = Math.floor(x / widthPerString);
-                if(stringIdx >= 0 && stringIdx < 6) strum(stringIdx);
+                const points = e.changedTouches ? Array.from(e.changedTouches) : [e];
+                
+                points.forEach(p => {
+                    const x = p.clientX - rect.left;
+                    const widthPerString = rect.width / 6;
+                    const stringIdx = Math.floor(x / widthPerString);
+                    if(stringIdx >= 0 && stringIdx < 6) strum(stringIdx);
+                });
             };
             stringsDiv.addEventListener('mousemove', (e) => { if(e.buttons===1) handleStrum(e); });
             stringsDiv.addEventListener('touchmove', (e) => { e.preventDefault(); handleStrum(e); }, {passive:false});
@@ -1063,11 +1197,12 @@
                     dot.className = 'chord-dot visible';
                     const leftPos = (strIdx * (100/6)) + (100/12);
                     dot.style.left = `${leftPos}%`;
-                    dot.style.top = `${((relativeFret - 0.5) / 12) * 100}%`;
+                    const fretHeight = 100 / 12;
+                    dot.style.top = `${(relativeFret - 0.5) * fretHeight}%`;
                     const hint = document.createElement('span');
                     hint.textContent = fret;
                     hint.className = 'fret-marker';
-                    hint.style.top = `${((relativeFret - 0.5) / 12) * 100}%`;
+                    hint.style.top = `${(relativeFret - 0.5) * fretHeight}%`;
                     container.appendChild(dot);
                     container.appendChild(hint);
                 }
@@ -1271,6 +1406,9 @@
             }
         });
 
+        window.addEventListener('hashchange', handleHash);
+        window.addEventListener('load', handleHash);
+
         document.addEventListener('keydown', (e) => {
             if(document.querySelector('.modal-overlay').style.display === 'flex') return;
             if(e.code === 'Escape') goBack();
@@ -1305,7 +1443,7 @@
                     }
                 }
             } else if (activeInstrument === 'guitar') {
-                 if(e.shiftKey) { e.preventDefault(); muteGuitar(); return; }
+                 if(e.shiftKey) { e.preventDefault(); snapGuitar(); return; }
                  if(e.key === 'ArrowUp') { e.preventDefault(); shiftFretView(-1); return; }
                  if(e.key === 'ArrowDown') { e.preventDefault(); shiftFretView(1); return; }
                  
@@ -1317,8 +1455,10 @@
                              strEl.classList.add('vibrate'); strEl.classList.add('active-red');
                              setTimeout(() => { strEl.classList.remove('vibrate'); strEl.classList.remove('active-red'); }, 150);
                              let f = currentChordShape[i]; 
-                             let p = GUITAR_STRINGS_BASE[i] + (f === -1 ? 0 : f);
-                             if(window[INSTRUMENTS.guitar.var]) player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, p, 2.5);
+                             let pitch = GUITAR_STRINGS_BASE[i] + (f === -1 ? 0 : f);
+                             if(window[INSTRUMENTS.guitar.var]) {
+                                 player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, pitch, 1.5);
+                             }
                          }
                      }, i * 30); }
                  }
@@ -1330,8 +1470,10 @@
                              strEl.classList.add('vibrate'); strEl.classList.add('active-red');
                              setTimeout(() => { strEl.classList.remove('vibrate'); strEl.classList.remove('active-red'); }, 150);
                              let f = currentChordShape[i];
-                             let p = GUITAR_STRINGS_BASE[i] + (f === -1 ? 0 : f);
-                             if(window[INSTRUMENTS.guitar.var]) player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, p, 2.5);
+                             let pitch = GUITAR_STRINGS_BASE[i] + (f === -1 ? 0 : f);
+                             if(window[INSTRUMENTS.guitar.var]) {
+                                 player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, pitch, 1.5);
+                             }
                          }
                      }, (5-i) * 30); }
                  }
@@ -1342,7 +1484,7 @@
                      const fret = currentChordShape[strIdx];
                      const pitch = GUITAR_STRINGS_BASE[strIdx] + (fret === -1 ? 0 : fret);
                      if(player && audioContext && masterGain && window[INSTRUMENTS.guitar.var]) {
-                        player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, pitch, 2.5);
+                        player.queueWaveTable(audioContext, masterGain, window[INSTRUMENTS.guitar.var], audioContext.currentTime, pitch, 1.5);
                      }
                      const strEl = document.querySelectorAll('.guitar-string')[strIdx];
                      if(strEl) {
