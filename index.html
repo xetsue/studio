@@ -4,13 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Studio</title>
-    <meta name="description" content="A web-app featuring Piano, Kalimba, and Guitar instruments using Web Audio Api. Create and practice music in your browser.">
-    <meta name="keywords" content="web music studio, virtual piano, online kalimba, interactive guitar, acoustic guitar, web audio, music practice, DAW, xetsue, github, xetsue studio, xetsue studio github">
-    <meta property="og:title" content="Studio - Web Audio API Music Instruments Playground">
-    <meta property="og:description" content="Interactive web music studio — Piano, Kalimba, and Guitar using your browser's offline api. Create and practice music in your browser.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://xetsue.github.io/studio">
-    <link rel="canonical" href="https://xetsue.github.io/studio">
     <script src="js/WebAudioFontPlayer.js"></script>
     <script src="js/webaudiofontdata/sound/0000_JCLive_sf2_file.js"></script>
     <script src="js/webaudiofontdata/sound/1080_GeneralUserGS_sf2_file.js"></script>
@@ -363,6 +356,22 @@
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
+            gap: 5px;
+        }
+
+        .pl-head-controls {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .pl-head-controls button {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            padding: 5px 8px;
         }
 
         .playlist-item {
@@ -378,33 +387,62 @@
             background-color: var(--text-color);
             color: var(--bg-color);
         }
+
+        .playlist-item.add-btn {
+            color: var(--text-color);
+            font-style: italic;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .hint-msg {
+            text-align: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.8em;
+            font-style: italic;
+            height: auto;
+            transition: opacity 1s;
+            opacity: 1;
+            cursor: pointer;
+            line-height: 1.4em;
+        }
+        .hint-msg.faded {
+            opacity: 0;
+        }
         
         .fret-controls {
             width: 40px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             border-right: 1px solid var(--border-color);
-            padding: 10px 0;
             height: 100%;
             position: absolute;
             left: 0;
             top: 0;
             z-index: 10;
             background: var(--bg-color);
-            gap: 20px;
+            overflow-y: auto;
         }
         
         .fret-controls button {
             width: 100%;
-            padding: 15px 0;
+            padding: 12px 0;
             background: none;
-            border: 1px solid var(--border-color);
+            border: none;
+            border-bottom: 1px solid var(--border-color);
             color: var(--text-color);
             cursor: pointer;
-            font-size: 1.2em;
+            font-size: 1.1em;
+            flex-shrink: 0;
         }
         
+        .fret-controls .num-btn {
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
         .fret-area-wrapper {
             flex-grow: 1;
             display: flex;
@@ -528,7 +566,7 @@
             border: 1px solid var(--border-color);
             padding: 20px;
             width: 90%;
-            max-width: 300px;
+            max-width: 500px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -554,7 +592,7 @@
         }
 
         .playlist-actions {
-            display: flex;
+            display: none;
             gap: 5px;
             padding: 5px;
             border-top: 1px solid var(--border-color);
@@ -609,6 +647,30 @@
             background: var(--glass-bg);
         }
 
+        #chordPresetsContainer {
+            display: flex;
+            gap: 10px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .preset-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .preset-column h4 {
+            margin: 0 0 5px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .back-text-desktop { display: inline; }
+        .back-text-mobile { display: none; }
+
         @media (max-width: 768px) {
             #guitarLayout {
                 flex-direction: column;
@@ -651,12 +713,8 @@
             .mobile-key-row {
                 height: 80px;
             }
-            .fret-controls {
-                gap: 5px;
-            }
-            .fret-controls button {
-                padding: 10px 0;
-            }
+            .back-text-desktop { display: none; }
+            .back-text-mobile { display: inline; }
         }
     </style>
 </head>
@@ -713,23 +771,28 @@
             <div id="guitarPlaylist">
                 <div class="playlist-header">
                     <span id="currentPlaylistName">Default</span>
-                    <button class="corner-btn" style="float: right; font-size: 0.8em; width: auto; height: auto; border: 1px solid; border-radius: 4px; color: var(--text-color); background: var(--glass-bg);" onclick="exitPlaylist()">Back</button>
+                    <div class="pl-head-controls">
+                        <div id="headerExportActions" style="display:none; gap:5px;">
+                            <button onclick="exportPlaylist()">E</button>
+                            <button onclick="importPlaylistTrigger()">L</button>
+                        </div>
+                        <button class="corner-btn" style="float: right; font-size: 0.8em; width: auto; height: auto; border: 1px solid; border-radius: 4px; color: var(--text-color); background: var(--glass-bg);" onclick="handleHeaderBack()">
+                            <span class="back-text-desktop">Back</span>
+                            <span class="back-text-mobile">&lt;</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="playlistItems" style="flex-grow: 1; overflow-y: auto;"></div>
                 <div class="playlist-actions" id="plActions">
-                    <button onclick="showCustomChordModal()">+ Custom</button>
                     <button onclick="showChordPresetList()">List</button>
                     <button onclick="saveCustomChord()">Save</button>
                 </div>
-                <div class="playlist-actions" id="exportAction">
-                    <button onclick="exportPlaylist()">E</button>
-                    <button onclick="importPlaylistTrigger()">L</button>
-                </div>
             </div>
             <div id="guitarFretboard">
-                <div class="fret-controls">
+                <div class="fret-controls" id="fretControlBar">
                     <button onclick="shiftFretView(-1)">▲</button>
                     <button onclick="shiftFretView(1)">▼</button>
+                    <div id="fretNumContainer" style="display:flex; flex-direction:column; width:100%;"></div>
                 </div>
                 <div class="fret-area-wrapper">
                     <div class="string-labels">
@@ -757,9 +820,9 @@
     </div>
 
     <div class="modal-overlay" id="chordListModal">
-        <div class="modal" style="width: 400px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal" style="width: 500px; max-height: 80vh; overflow-y: auto;">
             <h3>Presets</h3>
-            <div id="chordPresetsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;"></div>
+            <div id="chordPresetsContainer"></div>
             <button onclick="closeModal('chordListModal')" style="margin-top: 10px;">Close</button>
         </div>
     </div>
@@ -872,7 +935,7 @@
                 document.getElementById('menuView').style.display = 'flex';
                 activeInstrument = null;
                 editingChord = false;
-                document.getElementById('customChordControls').style.display = 'none';
+                document.getElementById('plActions').style.display = 'none';
                 activeChordIndex = null;
                 document.querySelectorAll('.playlist-item').forEach(d=>d.classList.remove('active'));
             }
@@ -1159,6 +1222,7 @@
             };
 
             const handleStrum = (e) => {
+                if(editingChord) return;
                 if(!audioContext) initAudio();
                 const rect = stringsDiv.getBoundingClientRect();
                 const points = e.changedTouches ? Array.from(e.changedTouches) : [e];
@@ -1170,26 +1234,47 @@
                     if(stringIdx >= 0 && stringIdx < 6) strum(stringIdx);
                 });
             };
+
+            const handleEditTap = (x, y) => {
+                const rect = stringsDiv.getBoundingClientRect();
+                const relX = x - rect.left;
+                const relY = y - rect.top;
+                
+                const strIdx = Math.floor(relX / (rect.width/6));
+                if(strIdx < 0 || strIdx > 5) return;
+
+                const areaRect = area.getBoundingClientRect();
+                const fHeight = areaRect.height / 12;
+                const fretRow = Math.floor(relY / fHeight);
+                
+                if(fretRow < 0 || fretRow > 11) return;
+
+                const actualFret = fretOffset + fretRow + 1;
+                if(currentChordShape[strIdx] === actualFret) currentChordShape[strIdx] = 0;
+                else currentChordShape[strIdx] = actualFret;
+                renderChordDots();
+            };
+
             stringsDiv.addEventListener('mousemove', (e) => { if(e.buttons===1) handleStrum(e); });
             stringsDiv.addEventListener('touchmove', (e) => { e.preventDefault(); handleStrum(e); }, {passive:false});
             stringsDiv.addEventListener('mousedown', handleStrum);
-            stringsDiv.addEventListener('touchstart', (e) => { e.preventDefault(); handleStrum(e); }, {passive:false});
-            renderChordDots();
+            
             stringsDiv.addEventListener('click', (e) => {
-                if(editingChord) {
-                    const rect = stringsDiv.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const strIdx = Math.floor(x / (rect.width/6));
-                    const areaRect = area.getBoundingClientRect();
-                    const fretHeight = areaRect.height / 12;
-                    const fretRow = Math.floor(y / fretHeight);
-                    const actualFret = fretOffset + fretRow + 1;
-                    if(currentChordShape[strIdx] === actualFret) currentChordShape[strIdx] = 0;
-                    else currentChordShape[strIdx] = actualFret;
-                    renderChordDots();
-                }
+                if(editingChord) handleEditTap(e.clientX, e.clientY);
             });
+
+            stringsDiv.addEventListener('touchstart', (e) => { 
+                if(editingChord) {
+                     e.preventDefault();
+                     const t = e.changedTouches[0];
+                     handleEditTap(t.clientX, t.clientY);
+                } else {
+                     e.preventDefault(); 
+                     handleStrum(e); 
+                }
+            }, {passive:false});
+
+            renderChordDots();
         }
 
         function renderChordDots() {
@@ -1222,13 +1307,28 @@
             renderGuitar();
         }
 
+        function handleHeaderBack() {
+            if(editingChord) {
+                editingChord = false;
+                document.getElementById('plActions').style.display = 'none';
+                loadPlaylist(currentPlaylistId);
+            } else {
+                exitPlaylist();
+            }
+        }
+
         function loadPlaylist(name) {
             currentPlaylistId = name;
             document.getElementById('currentPlaylistName').textContent = name;
             const container = document.getElementById('playlistItems');
             container.innerHTML = '';
-            document.getElementById('plActions').style.display = name === 'Default' ? 'none' : 'flex';
-            document.getElementById('exportAction').style.display = name === 'Default' ? 'none' : 'flex';
+            
+            document.getElementById('plActions').style.display = 'none';
+            document.getElementById('headerExportActions').style.display = name === 'Default' ? 'none' : 'flex';
+
+            const fretNumContainer = document.getElementById('fretNumContainer');
+            fretNumContainer.innerHTML = '';
+
             if(guitarPlaylists[name]) {
                 guitarPlaylists[name].forEach((chord, i) => {
                     const div = document.createElement('div');
@@ -1248,7 +1348,7 @@
                         }
                         renderChordDots();
                         editingChord = false;
-                        document.getElementById('customChordControls').style.display = 'none';
+                        document.getElementById('plActions').style.display = 'none';
                     };
                     div.oncontextmenu = (e) => {
                         e.preventDefault();
@@ -1262,10 +1362,61 @@
                         }
                     };
                     container.appendChild(div);
+
+                    if (i < 10) {
+                        const numBtn = document.createElement('button');
+                        numBtn.textContent = i + 1;
+                        numBtn.className = 'num-btn';
+                        numBtn.onclick = () => {
+                             if(guitarPlaylists[currentPlaylistId][i]) {
+                                 const items = document.querySelectorAll('.playlist-item');
+                                 if(items[i]) items[i].click();
+                             }
+                        };
+                        fretNumContainer.appendChild(numBtn);
+                    }
                 });
+
+                if (name !== 'Default') {
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'playlist-item add-btn';
+                    addBtn.textContent = 'Add +';
+                    addBtn.onclick = () => startAddChordFlow();
+                    container.appendChild(addBtn);
+                }
             }
         }
         
+        function startAddChordFlow() {
+            activeChordIndex = -1; 
+            currentChordShape = [0,0,0,0,0,0];
+            renderChordDots();
+            editingChord = true;
+            document.querySelectorAll('.playlist-item').forEach(d=>d.classList.remove('active'));
+            document.getElementById('plActions').style.display = 'flex';
+
+            const container = document.getElementById('playlistItems');
+            const existing = document.getElementById('tempHint');
+            if(existing) existing.remove();
+
+            const hint = document.createElement('div');
+            hint.id = 'tempHint';
+            hint.className = 'playlist-item hint-msg';
+            hint.innerHTML = '<span>Interact With The Guitar<br>To Add Custom Notes</span>';
+            
+            let fadeTimer;
+            const startFade = () => {
+                clearTimeout(fadeTimer);
+                hint.classList.remove('faded');
+                fadeTimer = setTimeout(() => hint.classList.add('faded'), 10000);
+            };
+            
+            hint.onclick = startFade;
+            container.appendChild(hint);
+            container.scrollTop = container.scrollHeight;
+            startFade();
+        }
+
         function deleteChordAction() {
             if(ctxTargetIndex > -1 && currentPlaylistId && guitarPlaylists[currentPlaylistId]) {
                 guitarPlaylists[currentPlaylistId].splice(ctxTargetIndex, 1);
@@ -1287,7 +1438,7 @@
                 currentChordShape = [...guitarPlaylists[currentPlaylistId][ctxTargetIndex].shape];
                 renderChordDots();
                 editingChord = true;
-                document.getElementById('customChordControls').style.display = 'block';
+                document.getElementById('plActions').style.display = 'flex';
             }
         }
         
@@ -1296,6 +1447,8 @@
             document.getElementById('currentPlaylistName').textContent = "Playlists";
             const container = document.getElementById('playlistItems');
             container.innerHTML = '';
+            document.getElementById('fretNumContainer').innerHTML = '';
+
             const defDiv = document.createElement('div');
             defDiv.className = 'playlist-item';
             defDiv.textContent = 'Default';
@@ -1323,7 +1476,7 @@
             addDiv.onclick = () => document.getElementById('nameModal').style.display = 'flex';
             container.appendChild(addDiv);
             document.getElementById('plActions').style.display = 'none';
-            document.getElementById('exportAction').style.display = 'none';
+            document.getElementById('headerExportActions').style.display = 'none';
             activeChordIndex = null;
             currentChordShape = [0,0,0,0,0,0];
             renderChordDots();
@@ -1340,21 +1493,11 @@
             }
         }
         
-        function showCustomChordModal() {
-            editingChord = true;
-            document.getElementById('customChordControls').style.display = 'block';
-            currentChordShape = [0,0,0,0,0,0];
-            renderChordDots();
-            activeChordIndex = -1;
-        }
-        
         function saveCustomChord() {
             if(editingChord && activeChordIndex > -1 && activeChordIndex < guitarPlaylists[currentPlaylistId].length) {
                 guitarPlaylists[currentPlaylistId][activeChordIndex].shape = [...currentChordShape];
                 loadPlaylist(currentPlaylistId);
-                editingChord = false;
-                document.getElementById('customChordControls').style.display = 'none';
-            } else {
+            } else if (editingChord) {
                 let name = prompt("Chord Name:");
                 if(!name) {
                     const preset = guitarPlaylists['Default'].find(p => JSON.stringify(p.shape) === JSON.stringify(currentChordShape));
@@ -1364,8 +1507,6 @@
                 if(name && currentPlaylistId) {
                     guitarPlaylists[currentPlaylistId].push({ name: name, shape: [...currentChordShape] });
                     loadPlaylist(currentPlaylistId);
-                    editingChord = false;
-                    document.getElementById('customChordControls').style.display = 'none';
                 }
             }
         }
@@ -1374,17 +1515,41 @@
             const m = document.getElementById('chordListModal');
             const c = document.getElementById('chordPresetsContainer');
             c.innerHTML = '';
+            
+            const majorCol = document.createElement('div');
+            majorCol.className = 'preset-column';
+            majorCol.innerHTML = '<h4>Major</h4>';
+            
+            const minorCol = document.createElement('div');
+            minorCol.className = 'preset-column';
+            minorCol.innerHTML = '<h4>Minor</h4>';
+            
             const presets = [...guitarPlaylists['Default']]; 
+            
             presets.forEach(p => {
                 const btn = document.createElement('button');
-                btn.textContent = p.name;
+                btn.textContent = p.name.replace(/^\d+\.\s*/, '');
+                btn.style.textAlign = 'left';
                 btn.onclick = () => {
-                    guitarPlaylists[currentPlaylistId].push({name: p.name.replace(/^\d+\.\s*/, ''), shape: [...p.shape]});
-                    loadPlaylist(currentPlaylistId);
+                    if (editingChord && activeChordIndex === -1) {
+                         guitarPlaylists[currentPlaylistId].push({name: p.name.replace(/^\d+\.\s*/, ''), shape: [...p.shape]});
+                         loadPlaylist(currentPlaylistId);
+                    } else if (editingChord && activeChordIndex > -1) {
+                         currentChordShape = [...p.shape];
+                         renderChordDots();
+                    }
                     closeModal('chordListModal');
                 };
-                c.appendChild(btn);
+
+                if (p.name.includes('Minor')) {
+                    minorCol.appendChild(btn);
+                } else {
+                    majorCol.appendChild(btn);
+                }
             });
+            
+            c.appendChild(majorCol);
+            c.appendChild(minorCol);
             m.style.display = 'flex';
         }
         
@@ -1506,6 +1671,12 @@
                      if(currentPlaylistId && guitarPlaylists[currentPlaylistId][i]) {
                          const items = document.querySelectorAll('.playlist-item');
                          if(items[i]) items[i].click();
+                     }
+                 }
+                 if (key === '0') {
+                    if(currentPlaylistId && guitarPlaylists[currentPlaylistId][9]) {
+                         const items = document.querySelectorAll('.playlist-item');
+                         if(items[9]) items[9].click();
                      }
                  }
             }
