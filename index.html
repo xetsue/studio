@@ -766,6 +766,43 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        @media (max-height: 500px) {
+            .header {
+                height: 40px;
+                padding: 0 10px;
+            }
+            .corner-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9em;
+            }
+            .instrument-view {
+                height: calc(100vh - 40px);
+                height: calc(100dvh - 40px);
+            }
+            .controls-bar {
+                height: 40px;
+                padding: 2px;
+                gap: 10px;
+            }
+            .controls-bar button {
+                padding: 4px 10px;
+                font-size: 0.9em;
+            }
+            #pianoContainer {
+                padding: 2px 10px;
+                gap: 5px;
+            }
+            .mobile-key-row {
+                height: auto;
+                flex: 1;
+                min-height: 40px;
+            }
+            .mobile-key.black {
+                height: 65%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1188,6 +1225,7 @@
             const container = document.getElementById('pianoContainer');
             container.innerHTML = '';
             const shift = octaveOffset * 12;
+            const activeTouches = {};
             
             const rows = [
                 {start: 72, end: 95},
@@ -1259,21 +1297,52 @@
                         const t = e.changedTouches[i];
                         const el = document.elementFromPoint(t.clientX, t.clientY);
                         if(el && el.classList.contains('mobile-key')) {
-                             startNoteAction(e, parseInt(el.dataset.pitch), el);
+                            const pitch = parseInt(el.dataset.pitch);
+                            startNoteAction(e, pitch, el);
+                            activeTouches[t.identifier] = pitch;
                         }
                     }
                 }, {passive:false});
                 
-                row.addEventListener('touchend', (e) => {
+                row.addEventListener('touchmove', (e) => {
                     e.preventDefault();
                     for(let i=0; i<e.changedTouches.length; i++) {
                         const t = e.changedTouches[i];
                         const el = document.elementFromPoint(t.clientX, t.clientY);
-                         if(el && el.classList.contains('mobile-key')) {
-                             stopNoteAction(e, parseInt(el.dataset.pitch), el);
+                        const newPitch = (el && el.classList.contains('mobile-key')) ? parseInt(el.dataset.pitch) : null;
+                        const oldPitch = activeTouches[t.identifier];
+                        
+                        if (newPitch !== oldPitch) {
+                            if (oldPitch !== undefined) {
+                                stopPianoNote(oldPitch);
+                                const oldEl = document.querySelector(`.mobile-key[data-pitch="${oldPitch}"]`);
+                                if(oldEl) oldEl.classList.remove('active-red');
+                                delete activeTouches[t.identifier];
+                            }
+                            if (newPitch !== null) {
+                                startNoteAction(e, newPitch, el);
+                                activeTouches[t.identifier] = newPitch;
+                            }
                         }
                     }
                 }, {passive:false});
+                
+                const handleTouchEnd = (e) => {
+                    e.preventDefault();
+                    for(let i=0; i<e.changedTouches.length; i++) {
+                        const t = e.changedTouches[i];
+                        const pitch = activeTouches[t.identifier];
+                        if (pitch !== undefined) {
+                            stopPianoNote(pitch);
+                            const el = document.querySelector(`.mobile-key[data-pitch="${pitch}"]`);
+                            if(el) el.classList.remove('active-red');
+                            delete activeTouches[t.identifier];
+                        }
+                    }
+                };
+
+                row.addEventListener('touchend', handleTouchEnd, {passive:false});
+                row.addEventListener('touchcancel', handleTouchEnd, {passive:false});
                 
                 window.addEventListener('mouseup', () => {
                      Object.keys(activePianoEnvelopes).forEach(p => stopPianoNote(p));
